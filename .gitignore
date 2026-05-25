@@ -44,3 +44,5 @@ fund_data/*.html
 fund_data/*.json
 fund_data/*.csv
 backtest_result.csv
+
+.vercel
