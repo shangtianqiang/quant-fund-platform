@@ -1,13 +1,19 @@
-# 黄金ETF量化投资平台
+# 量化投资平台
 
-基于 FastAPI + Next.js 构建的黄金ETF联接基金量化分析、策略回测与信号监控平台。
+多基金量化分析、策略回测与信号监控平台。支持动态添加任意类型基金（黄金ETF、新能源、石油、半导体等），内置4种量化策略，帮助投资者做出更理性的决策。
+
+**在线预览：** https://quant-fund-platform.onrender.com
 
 ## 功能特性
 
-- **基金管理** — 查看华安/国泰/博时/易方达黄金ETF联接基金净值走势，一键刷新数据
-- **策略回测** — 内置 4 种量化策略，支持自定义参数回测
+- **基金管理** — 动态添加/编辑/删除任意基金，支持按类型筛选，自动从天天基金拉取净值数据
+- **策略回测** — 内置 4 种量化策略，支持自定义参数回测，查看净值曲线和买卖信号
 - **信号监控** — 实时技术指标（RSI、MACD、均线、布林带），自动判断趋势和买卖信号
 - **可视化看板** — ECharts 交互式图表，净值曲线、买卖信号标记、绩效指标展示
+
+## 支持的基金类型
+
+黄金ETF | 新能源 | 石油 | 电力 | 半导体/芯片 | 医药 | 消费 | 军工 | 指数基金 | 债券基金 | 其他
 
 ## 内置策略
 
@@ -23,8 +29,9 @@
 | 层 | 技术 |
 |----|------|
 | 后端 | FastAPI + SQLite + pandas + numpy |
-| 前端 | Next.js 14 + React 18 + TypeScript + TailwindCSS + ECharts |
+| 前端 | Next.js 16 + React 19 + TypeScript + TailwindCSS + ECharts |
 | 数据 | 天天基金 API |
+| 部署 | Render (Docker) |
 
 ## 项目结构
 
@@ -34,7 +41,7 @@
 │   ├── database.py           # SQLite 数据库
 │   ├── models.py             # 数据模型
 │   ├── routers/              # API 路由
-│   │   ├── funds.py          # 基金数据
+│   │   ├── funds.py          # 基金 CRUD + 数据
 │   │   ├── strategies.py     # 策略回测
 │   │   └── signals.py        # 实时信号
 │   └── services/             # 业务逻辑
@@ -45,10 +52,12 @@
 ├── frontend/                 # Next.js 前端
 │   ├── app/
 │   │   ├── page.tsx          # 策略总览
-│   │   ├── funds/page.tsx    # 基金管理
+│   │   ├── funds/page.tsx    # 基金管理（CRUD）
 │   │   ├── strategies/page.tsx # 策略回测
 │   │   └── signals/page.tsx  # 信号监控
 │   └── components/           # 图表、卡片组件
+├── Dockerfile                # Docker 部署配置
+├── render.yaml               # Render 部署配置
 └── fund_data/                # 历史数据文件
 ```
 
@@ -94,6 +103,9 @@ npm run dev
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | GET | /api/funds | 基金列表 |
+| POST | /api/funds | 添加基金 |
+| PUT | /api/funds/{code} | 修改基金信息 |
+| DELETE | /api/funds/{code} | 删除基金 |
 | GET | /api/funds/{code}/nav | 基金净值数据 |
 | POST | /api/funds/{code}/refresh | 刷新基金数据 |
 | GET | /api/strategies | 策略列表 |
@@ -101,11 +113,22 @@ npm run dev
 | GET | /api/signals | 所有基金最新信号 |
 | GET | /api/signals/{code} | 单只基金信号 |
 
-## 截图
+## 部署
 
-| 策略总览 | 策略回测 |
-|---------|---------|
-| ![总览](docs/dashboard.png) | ![回测](docs/backtest.png) |
+### Render 部署
+
+1. Fork 本项目到你的 GitHub
+2. 登录 [Render](https://render.com)
+3. New → Blueprint → 连接你的 GitHub 仓库
+4. Render 会自动识别 `render.yaml` 并创建服务
+5. 部署完成后获得在线链接
+
+### Docker 部署
+
+```bash
+docker build -t quant-platform .
+docker run -p 8000:8000 quant-platform
+```
 
 ## License
 
