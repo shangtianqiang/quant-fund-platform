@@ -16,7 +16,7 @@ export default function Sidebar() {
   return (
     <aside className="w-56 bg-white border-r border-gray-200 flex flex-col">
       <div className="p-5 border-b border-gray-200">
-        <h1 className="text-lg font-bold text-gray-800">黄金ETF量化平台</h1>
+        <h1 className="text-lg font-bold text-gray-800">量化投资平台</h1>
         <p className="text-xs text-gray-400 mt-1">Quant Fund Dashboard</p>
       </div>
       <nav className="flex-1 p-3">

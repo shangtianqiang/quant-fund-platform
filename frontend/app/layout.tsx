@@ -6,8 +6,8 @@ import Sidebar from "@/components/Layout/Sidebar"
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "黄金ETF量化投资平台",
-  description: "基金量化策略分析、回测与信号监控",
+  title: "量化投资平台",
+  description: "多基金量化策略分析、回测与信号监控",
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

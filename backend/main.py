@@ -10,7 +10,7 @@ from fastapi.responses import FileResponse
 from database import init_db
 from routers import funds, strategies, signals
 
-app = FastAPI(title="黄金ETF量化投资平台", version="1.0.0")
+app = FastAPI(title="量化投资平台", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -50,8 +50,8 @@ if os.path.isdir(FRONTEND_DIR):
         index_path = os.path.join(FRONTEND_DIR, "index.html")
         if os.path.isfile(index_path):
             return FileResponse(index_path)
-        return {"message": "黄金ETF量化投资平台 API", "version": "1.0.0"}
+        return {"message": "量化投资平台 API", "version": "1.0.0"}
 else:
     @app.get("/")
     def root():
-        return {"message": "黄金ETF量化投资平台 API", "version": "1.0.0"}
+        return {"message": "量化投资平台 API", "version": "1.0.0"}

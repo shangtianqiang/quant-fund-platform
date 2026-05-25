@@ -1,42 +1,46 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { signalApi, SignalData } from "@/lib/api"
+import { signalApi, SignalData, clearCache } from "@/lib/api"
 import SignalPanel from "@/components/Signal/SignalPanel"
+import { LoadingSpinner, ErrorMessage } from "@/components/UI/StatusMessage"
 
 export default function SignalsPage() {
   const [signals, setSignals] = useState<SignalData[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
 
   useEffect(() => {
-    signalApi
-      .getAll()
-      .then(setSignals)
-      .catch(console.error)
-      .finally(() => setLoading(false))
+    loadSignals()
   }, [])
 
-  function refresh() {
+  async function loadSignals() {
     setLoading(true)
-    signalApi
-      .getAll()
-      .then(setSignals)
-      .catch(console.error)
-      .finally(() => setLoading(false))
+    setError("")
+    try {
+      const data = await signalApi.getAll()
+      setSignals(data)
+    } catch (e) {
+      console.error(e)
+      setError("加载信号数据失败")
+    } finally {
+      setLoading(false)
+    }
   }
 
-  if (loading) {
-    return <div className="flex items-center justify-center h-64 text-gray-400">加载中...</div>
+  function refresh() {
+    clearCache("signals:all")
+    loadSignals()
   }
+
+  if (loading) return <LoadingSpinner text="加载信号数据..." />
+  if (error) return <ErrorMessage text={error} onRetry={loadSignals} />
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-800">信号监控</h1>
-        <button
-          onClick={refresh}
-          className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
+        <button onClick={refresh} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">
           刷新信号
         </button>
       </div>

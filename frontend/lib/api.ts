@@ -1,9 +1,12 @@
 import axios from "axios"
+import { cachedFetch, clearCache } from "./cache"
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "",
   timeout: 30000,
 })
+
+export { clearCache }
 
 export interface FundInfo {
   code: string
@@ -74,19 +77,46 @@ export interface SignalData {
   momentum: number | null
 }
 
+export const FUND_TYPES = [
+  "黄金ETF", "新能源", "石油", "电力", "半导体/芯片",
+  "医药", "消费", "军工", "指数基金", "债券基金", "其他"
+]
+
 export const fundApi = {
-  list: () => api.get<FundInfo[]>("/api/funds").then((r) => r.data),
+  list: () => cachedFetch("funds:list", () => api.get<FundInfo[]>("/api/funds").then((r) => r.data)),
+  create: (data: { code: string; name: string; fund_type: string }) => {
+    clearCache("funds:list")
+    return api.post<FundInfo>("/api/funds", data).then((r) => r.data)
+  },
+  update: (code: string, data: { name?: string; fund_type?: string }) => {
+    clearCache("funds:list")
+    return api.put<FundInfo>(`/api/funds/${code}`, data).then((r) => r.data)
+  },
+  delete: (code: string) => {
+    clearCache("funds:list")
+    clearCache(`funds:nav:${code}`)
+    return api.delete(`/api/funds/${code}`).then((r) => r.data)
+  },
   getNav: (code: string, startDate?: string, endDate?: string) => {
     const params: Record<string, string> = {}
     if (startDate) params.start_date = startDate
     if (endDate) params.end_date = endDate
-    return api.get<FundNavResponse>(`/api/funds/${code}/nav`, { params }).then((r) => r.data)
+    const key = `funds:nav:${code}:${startDate || ""}:${endDate || ""}`
+    return cachedFetch(key, () =>
+      api.get<FundNavResponse>(`/api/funds/${code}/nav`, { params }).then((r) => r.data)
+    )
   },
-  refresh: (code: string) => api.post(`/api/funds/${code}/refresh`).then((r) => r.data),
+  refresh: (code: string) => {
+    clearCache(`funds:nav:${code}`)
+    return api.post(`/api/funds/${code}/refresh`).then((r) => r.data)
+  },
 }
 
 export const strategyApi = {
-  list: () => api.get<StrategyInfo[]>("/api/strategies").then((r) => r.data),
+  list: () =>
+    cachedFetch("strategies:list", () =>
+      api.get<StrategyInfo[]>("/api/strategies").then((r) => r.data)
+    ),
   run: (data: { strategy_name: string; fund_code: string; initial_capital?: number }) =>
     api.post<BacktestResult>("/api/strategies/run", data).then((r) => r.data),
   results: (limit?: number) =>
@@ -94,6 +124,12 @@ export const strategyApi = {
 }
 
 export const signalApi = {
-  getAll: () => api.get<SignalData[]>("/api/signals").then((r) => r.data),
-  get: (code: string) => api.get<SignalData>(`/api/signals/${code}`).then((r) => r.data),
+  getAll: () =>
+    cachedFetch("signals:all", () =>
+      api.get<SignalData[]>("/api/signals").then((r) => r.data)
+    ),
+  get: (code: string) =>
+    cachedFetch(`signals:${code}`, () =>
+      api.get<SignalData>(`/api/signals/${code}`).then((r) => r.data)
+    ),
 }

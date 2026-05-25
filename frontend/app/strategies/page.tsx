@@ -5,27 +5,38 @@ import { strategyApi, fundApi, StrategyInfo, FundInfo, BacktestResult } from "@/
 import StrategyChart from "@/components/Charts/StrategyChart"
 import PerfCard from "@/components/Cards/PerfCard"
 import TradeTable from "@/components/Tables/TradeTable"
+import { LoadingSpinner, ErrorMessage } from "@/components/UI/StatusMessage"
 
 export default function StrategiesPage() {
   const [strategies, setStrategies] = useState<StrategyInfo[]>([])
   const [funds, setFunds] = useState<FundInfo[]>([])
   const [selectedStrategy, setSelectedStrategy] = useState("")
-  const [selectedFund, setSelectedFund] = useState("000217")
+  const [selectedFund, setSelectedFund] = useState("")
   const [capital, setCapital] = useState(100000)
   const [result, setResult] = useState<BacktestResult | null>(null)
   const [loading, setLoading] = useState(false)
+  const [initLoading, setInitLoading] = useState(true)
+  const [error, setError] = useState("")
 
   useEffect(() => {
-    Promise.all([strategyApi.list(), fundApi.list()]).then(([s, f]) => {
-      setStrategies(s)
-      setFunds(f)
-      if (s.length > 0) setSelectedStrategy(s[0].name)
-    })
+    Promise.all([strategyApi.list(), fundApi.list()])
+      .then(([s, f]) => {
+        setStrategies(s)
+        setFunds(f)
+        if (s.length > 0) setSelectedStrategy(s[0].name)
+        if (f.length > 0) setSelectedFund(f[0].code)
+      })
+      .catch((e) => {
+        console.error(e)
+        setError("加载策略列表失败")
+      })
+      .finally(() => setInitLoading(false))
   }, [])
 
   async function handleRun() {
     if (!selectedStrategy) return
     setLoading(true)
+    setResult(null)
     try {
       const res = await strategyApi.run({
         strategy_name: selectedStrategy,
@@ -35,10 +46,14 @@ export default function StrategiesPage() {
       setResult(res)
     } catch (e) {
       console.error(e)
+      setError("策略运行失败，请重试")
     } finally {
       setLoading(false)
     }
   }
+
+  if (initLoading) return <LoadingSpinner text="加载策略列表..." />
+  if (error && strategies.length === 0) return <ErrorMessage text={error} onRetry={() => window.location.reload()} />
 
   const isDca = result?.type === "dca"
   const perf = result?.perf
@@ -97,7 +112,15 @@ export default function StrategiesPage() {
         )}
       </div>
 
-      {result && (
+      {loading && <LoadingSpinner text="正在运行回测..." />}
+
+      {error && !loading && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-600">
+          {error}
+        </div>
+      )}
+
+      {result && !loading && (
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {isDca ? (

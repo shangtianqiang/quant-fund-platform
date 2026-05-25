@@ -78,6 +78,54 @@ def get_all_funds() -> list[dict]:
     return [dict(r) for r in rows]
 
 
+def add_fund(code: str, name: str, fund_type: str = "其他") -> dict:
+    with get_db() as conn:
+        conn.execute(
+            "INSERT OR REPLACE INTO funds (code, name, fund_type) VALUES (?, ?, ?)",
+            (code, name, fund_type)
+        )
+    return {"code": code, "name": name, "fund_type": fund_type}
+
+
+def update_fund(code: str, name: str = None, fund_type: str = None) -> dict:
+    with get_db() as conn:
+        existing = conn.execute("SELECT * FROM funds WHERE code = ?", (code,)).fetchone()
+        if not existing:
+            raise ValueError(f"基金 {code} 不存在")
+        if name:
+            conn.execute("UPDATE funds SET name = ? WHERE code = ?", (name, code))
+        if fund_type:
+            conn.execute("UPDATE funds SET fund_type = ? WHERE code = ?", (fund_type, code))
+        updated = conn.execute("SELECT * FROM funds WHERE code = ?", (code,)).fetchone()
+    return dict(updated)
+
+
+def delete_fund(code: str) -> bool:
+    with get_db() as conn:
+        existing = conn.execute("SELECT * FROM funds WHERE code = ?", (code,)).fetchone()
+        if not existing:
+            return False
+        conn.execute("DELETE FROM fund_nav WHERE code = ?", (code,))
+        conn.execute("DELETE FROM funds WHERE code = ?", (code,))
+    return True
+
+
+def search_fund_by_code(code: str) -> dict | None:
+    """从东方财富 API 查询基金名称"""
+    try:
+        url = f"https://fundsuggest.eastmoney.com/FundSearch/api/FundSearchAPI.ashx"
+        params = {"m": 1, "key": code}
+        resp = requests.get(url, params=params, timeout=5)
+        data = resp.json()
+        if data.get("Datas"):
+            for item in data["Datas"]:
+                if item.get("CODE") == code:
+                    return {"code": code, "name": item.get("NAME", ""), "fund_type": item.get("FundBaseInfo", {}).get("FTYPE", "其他")}
+    except Exception:
+        pass
+    return None
+
+
 def load_fund_data_to_df(code: str) -> pd.DataFrame:
     df = get_fund_nav(code)
     if df.empty:

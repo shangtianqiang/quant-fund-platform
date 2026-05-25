@@ -5,7 +5,18 @@ from typing import Optional
 class FundInfo(BaseModel):
     code: str
     name: str
-    fund_type: str = "ETF联接"
+    fund_type: str = "其他"
+
+
+class FundCreate(BaseModel):
+    code: str
+    name: str
+    fund_type: str = "其他"
+
+
+class FundUpdate(BaseModel):
+    name: Optional[str] = None
+    fund_type: Optional[str] = None
 
 
 class NavData(BaseModel):
@@ -25,7 +36,7 @@ class FundNavResponse(BaseModel):
 
 class StrategyRequest(BaseModel):
     strategy_name: str
-    fund_code: str = "000217"
+    fund_code: str
     initial_capital: float = 100000
     commission: float = 0.001
 
