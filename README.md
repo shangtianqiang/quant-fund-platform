@@ -2,7 +2,7 @@
 
 多基金量化分析、策略回测与信号监控平台。支持动态添加任意类型基金（黄金ETF、新能源、石油、半导体等），内置4种量化策略，帮助投资者做出更理性的决策。
 
-**在线预览：** https://quant-fund-platform.onrender.com
+**在线预览：** https://quant-fund-platform.vercel.app
 
 ## 功能特性
 
